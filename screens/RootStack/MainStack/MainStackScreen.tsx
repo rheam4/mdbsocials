@@ -3,6 +3,7 @@ import { Button } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import FeedScreen from "./FeedScreen/FeedScreen.main";
 import DetailScreen from "./DetailScreen/DetailScreen.main";
+import HomeScreen from "./HomeScreen/HomeScreen.main";
 import NewSocialScreen from "../NewSocialScreen/NewSocialScreen.main";
 import { SocialModel } from "../../../models/social";
 
@@ -27,6 +28,16 @@ export function MainStackScreen() {
       {/* Add your HomeScreen to the MainStack here! */}
 
       <MainStack.Screen
+        name ="HomeScreen"
+        component={HomeScreen}
+        options={({ navigation }) => ({
+          title: "Home",
+        })
+        }
+
+      />
+
+      <MainStack.Screen
         name="FeedScreen"
         component={FeedScreen}
         options={({ navigation }) => ({
@@ -34,7 +45,7 @@ export function MainStackScreen() {
           headerLeft: () => (
             <Button
               title="Home"
-              onPress={/*TODO*/} // When we click the home button on top left, navigate to HomeScreen
+              onPress={()=>console.log("Hello")} // When we click the home button on top left, navigate to HomeScreen
             />
           ),
           headerTitle: "All Socials",

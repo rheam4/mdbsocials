@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, FlatList } from "react-native";
-import { Appbar, Card } from "react-native-paper";
+import { View, FlatList, Text, Image} from "react-native";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { Appbar, Card, Title, Paragraph} from "react-native-paper";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import { SocialModel } from "../../../../models/social.js";
@@ -27,6 +28,8 @@ interface Props {
 export default function FeedScreen({ navigation }: Props) {
   // TODO: Initialize a list of SocialModel objects in state.
 
+  const[socials, setSocials] = useState<SocialModel[]>([]); //ceates empty list to store all events
+
   /* TYPESCRIPT HINT: 
     When we call useState(), we can define the type of the state
     variable using something like this:
@@ -36,6 +39,7 @@ export default function FeedScreen({ navigation }: Props) {
     TODO: In a useEffect hook, start a Firebase observer to listen to the "socials" node in Firestore.
     Read More: https://firebase.google.com/docs/firestore/query-data/listen
   
+    
     Reminders:
       1. Make sure you start a listener that's attached to this node!
       2. The onSnapshot method returns a method. Make sure to return the method
@@ -47,24 +51,72 @@ export default function FeedScreen({ navigation }: Props) {
           load socials on this screen.
   */
 
+    const db = getFirestore();
+    useEffect(() => {  // useeffect = runs when code first loads
+      const q = query(collection(db, 'socials')); // sets up request to get data from 'socials' collction in db
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {  //starts watching the database for changes
+        const socialsList: SocialModel[] = [];   // creates new empty list to hold social events
+  
+        snapshot.forEach((doc) => { // fpr each piece of data in db, gets the actual information from the document
+          const data = doc.data()
+    
+          const socialDoc: SocialModel = {
+            eventName: data.eventName,
+            eventDate: data.eventDate,
+            eventDescription: data.eventDescription,
+            eventImage: data.eventImage,
+            eventLocation: data.eventLocation,
+          };
+    
+          socialsList.push(socialDoc); // adds new social event w data from db to list
+          console.log(`${doc.id} => `, data);
+        });
+  
+        setSocials(socialsList);
+      });
+  
+      return () => unsubscribe(); 
+    }, []);
+      
+    
+
   const renderItem = ({ item }: { item: SocialModel }) => {
     // TODO: Return a Card corresponding to the social object passed in
     // to this function. On tapping this card, navigate to DetailScreen
     // and pass this social.
 
-    return null;
+    return (
+      <Card onPress={() => navigation.navigate('DetailScreen', { social: item })}>
+        <Card.Content>
+          <Title>{item.eventName}</Title>
+          <Text>{item.eventLocation}</Text>
+          <Text>{item.eventDate}</Text>
+          <Paragraph>{item.eventDescription}</Paragraph>
+          <Image source={{ uri: item.eventImage }} />
+        </Card.Content>z
+      </Card>
+    );
   };
 
   const NavigationBar = () => {
     // TODO: Return an AppBar, with a title & a Plus Action Item that goes to the NewSocialScreen.
-    return null;
+    return (
+      <Appbar.Header>
+        <Appbar.Content title="Socials" />
+        <Appbar.Action icon="Plus Action Item" onPress={() => navigation.navigate('NewSocialScreen')} />
+      </Appbar.Header>
+    );
   };
 
   return (
     <>
-      {/* Embed your NavigationBar here. */}
+      <NavigationBar/>
       <View style={styles.container}>
-        {/* Return a FlatList here. You'll need to use your renderItem method. */}
+          <FlatList
+          data={socials}
+          renderItem={renderItem}
+        />
       </View>
     </>
   );
